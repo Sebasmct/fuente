@@ -1,8 +1,9 @@
-#if ARDUINO >= 100
+
+
+
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
+
+//#include "WProgram.h"
 #include <Adafruit_NeoPixel.h>
 #include <Wire.h>
 #include "actuador_gps.h"
@@ -59,6 +60,7 @@ int PosLedRelay[16] = {15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0};
 float corrientes[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 float corrientesmemory[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 float voltage[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+float ina_vect_serial[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // Rele deja de pasar corriente con LOW
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PinLed, NEO_GRB + NEO_KHZ800);
@@ -77,8 +79,8 @@ void setup() {
   Wire.begin();
 
   pixels.begin();
-  Serial.begin(115200);
-
+  Serial.begin(9600);
+  Serial1.begin(9600);
   //endendido leds
   iniciar_leds();
   apagar_leds();
@@ -102,14 +104,14 @@ void setup() {
   pinMode(rele_15, OUTPUT);
   pinMode(rele_16, OUTPUT);
   //apagamos los relays
-  Reles_off();
-  //Reles_on();
+  //Reles_off();
+  Reles_on();
 }
 
 void loop() {
-
   datos_sensor();
   carga_unidades();
+  //imprimir_serial();
 }
 
 
@@ -159,7 +161,7 @@ void carga_unidades() {
     else if (corrientes[i] <= 29 && corrientes[i] >= 6) {
       //verde
       contador ++;
-      //digitalWrite(PosRelay[i], LOW);
+      digitalWrite(PosRelay[i], LOW);
       pixels.setPixelColor(PosLedRelay[i], pixels.Color(0, 255, 0));
       pixels.show();
       delay(5);
@@ -170,8 +172,6 @@ void carga_unidades() {
         pixels.setPixelColor(PosLedRelay[i], pixels.Color(0, 255, 0));
         contador =0;
       }
-
-    
 
     if (voltage[i] < 2) {
       digitalWrite(PosRelay[i], LOW);
@@ -189,7 +189,7 @@ void Reles_on (void) {
 
   for (int i = 0; i <= 15; i++) {
     digitalWrite(PosRelay[i], LOW);
-    delay(5);
+    delay(100);
   }
 
 }
@@ -240,6 +240,9 @@ void apagar_leds(void)
   }
   pixels.show();
 }
+
+
+
 
 void wireWriteRegister (unsigned char SlaveAddress, uint8_t reg, uint16_t value) {
 
@@ -364,6 +367,25 @@ float get_voltaje(unsigned char SlaveAddress) {
 
 void imprimir_Datos(unsigned char SlaveAddress) {
   switch (SlaveAddress) {
+
+/*
+    case 0x40: ina_vect_serial[0] =(current_mA );delay(10);break;
+    case 0x41: ina_vect_serial[1] =(current_mA );delay(10);break;
+    case 0x42: ina_vect_serial[2] =(current_mA );delay(10);break;
+    case 0x43: ina_vect_serial[3] =(current_mA );delay(10);break;
+    case 0x44: ina_vect_serial[4] =(current_mA );delay(10);break;
+    case 0x45: ina_vect_serial[5] =(current_mA );delay(10);break;
+    case 0x46: ina_vect_serial[6] =(current_mA );delay(10);break;
+    case 0x47: ina_vect_serial[7] =(current_mA );delay(10);break;
+    case 0x48: ina_vect_serial[8] =(current_mA );delay(10);break;
+    case 0x49: ina_vect_serial[9] =(current_mA );delay(10);break;
+    case 0x4A: ina_vect_serial[10] =(current_mA );delay(10);break;
+    case 0x4B: ina_vect_serial[11] =(current_mA );delay(10);break;
+    case 0x4C: ina_vect_serial[12] =(current_mA );delay(10);break;
+    case 0x4D: ina_vect_serial[13] =(current_mA );delay(10);break;
+    case 0x4E: ina_vect_serial[14] =(current_mA );delay(10);break;
+    
+    */           
     case 0x40: Serial.print(" 0x40, "); Serial.print(current_mA ); delay(10); break;
     case 0x41: Serial.print(" 0x41, "); Serial.print(current_mA ); delay(10); break;
     case 0x42: Serial.print(" 0x42, "); Serial.print(current_mA ); delay(10); break;
@@ -380,6 +402,19 @@ void imprimir_Datos(unsigned char SlaveAddress) {
     case 0x4D: Serial.print(" 0x4D, "); Serial.print(current_mA ); delay(10); break;
     case 0x4E: Serial.print(" 0x4E, "); Serial.print(current_mA ); delay(10); break;
     case 0x4F: Serial.print(" 0x4F, "); Serial.println(current_mA ); delay(10); break;
-  }
+   }
 
+}
+
+
+void imprimir_serial(){
+
+for(int i=0; i<15; i++){
+
+  Serial.print(ina_vect_serial[i]);
+  Serial.println();
+  delay(10);
+  
+}
+  
 }
